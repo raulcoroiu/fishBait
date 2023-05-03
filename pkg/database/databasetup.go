@@ -31,11 +31,19 @@ func DBSet() *mongo.Client{
 
 	if err != nil {
 		log.Println("failed to connect to mongodb ")
+		return nil
 	}
+
+	fmt.Println("Successfully connected")
+	return client
+
 }
 
-func UserData(client *mongo.Client, collectionName string) *mongo.Collection{
+var Client *mongo.Client = DBSet()
 
+func UserData(client *mongo.Client, collectionName string) *mongo.Collection{
+	var collection *mongo.Collection = client.Database("Ecommerece").Collection(collectionName)
+	return collection
 }
 
 func ProductData(client *mongo.Client, collectionName string) *mongo.Collection{
