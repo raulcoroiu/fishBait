@@ -61,9 +61,41 @@ func Singup() gin.HandleFunc{
 	user.Updated_At, _ = time.Parse(time.RFC3339 , time.Now().Format(time.RFC3339))
 	user.ID = primitve.NewObjectID()
 	user.User_ID = user.ID.Hex() 
+	token, refreshtoken, _ := generate.TokenGenerator(*user.Email, *user.Firs_Name, *user.Last_Name, *user.User_ID)
+	user.Token = &token 
+	user.Refresh_Token = &refreshtoken
+	user.UserCart = make([]moleds.ProductUser, 0)
+	user.Adress_Details = make([]models.Adress, 0)
+	user.Order_Status = make([]models.Order, 0)
+	UserCollection.InsertOne(ctx, user)
+	_, inserterr := UserCollection.InsertOne(ctx, user)
+	if inserterr != nil{
+		x.JSON(http.StatusInternalServerError, gin.H{"error":"the user did not get created"})
+		return
+	}
+	defer cancel()
+
+	c.JSON(http.StatusCreated, "Successfully signed in!")
 }
 
 func Login() gin.HandleFunc{
+	return func(c *gin.Context){
+		var ctx, cancel = context.WithTimeOut(context.Backgroud(). 100*time.Second)
+		defer cancel()
+
+		var user models.User
+		if err := c.BindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+
+		err := UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&founduser)
+		defer cancel()
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "login or password incorrect"})
+		}
+	}
 
 }
 
